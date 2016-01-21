@@ -4,15 +4,27 @@ ehom.TabManager = function TabManager() {
     this.minTabs = 5;
     this.tabLife = 30;
     this.cleanupInterval = 1;
+    this.numRememberedTabs = 25;
     this.activeTab = null;
     this.tabCount = 0;
     this.currentWindow = null;
+    this.closedTabs = Array(this.numRememberedTabs);
+    this.exceptions = ['www.pandora.com', 'pandora.com'];
 
     chrome.windows.getCurrent({}, ehom.init);
     chrome.tabs.onCreated.addListener(ehom.tabCreate);
     chrome.tabs.onRemoved.addListener(ehom.tabClose);
     chrome.tabs.onActivated.addListener(ehom.tabActivated);
     chrome.windows.onFocusChanged.addListener(ehom.onFocusChanged);
+};
+
+ehom.TabManager.prototype.rememberTab = function rememberTab(url) {
+
+    for (var i = this.numRememberedTabs - 1; i > 0; i--) {
+        this.closedTabs[i] = this.closedTabs[i - 1];
+    }
+
+    this.closedTabs[0] = url;
 };
 
 ehom.TabManager.prototype.updateMinTabs = function updateMinTabs(minTabs) {
@@ -44,10 +56,25 @@ ehom.TabManager.prototype.cleanupTabs = function cleanupTabs() {
         if (this.tabMap[tabId] != 0) {
             if (this.tabCount > this.minTabs && ((now - this.tabMap[tabId]) > this.tabLifeMilis())) {
 
-                chrome.tabs.remove(parseFloat(tabId), null);
+                chrome.tabs.get(parseFloat(tabId), ehom.tabCleanup);
             }
         }
     }
+};
+
+ehom.TabManager.prototype.tabCleanup = function tabCleanup(tab) {
+    var dregex = /[http:\/\/|https:\/\/]+(.*\.[com|net|org|co]+)/
+
+    var match = dregex.exec(tab.url);
+    if (match){
+        if (this.exceptions.indexOf(match[1]) < 0) {
+            this.rememberTab(tab.url);
+            chrome.tabs.remove(tab.id, null);
+        }
+        return;
+    }
+
+    chrome.tabs.remove(tab.id, null);
 };
 
 ehom.TabManager.prototype.tabCreateEvent = function tabCreateEvent(tab) {
@@ -131,6 +158,9 @@ ehom.onFocusChanged = function(windowId) {
 ehom.updateActive = function(tabs) {
     tm.updateActiveTab(tabs);
 };
+ehom.tabCleanup = function(tab) {
+    tm.tabCleanup(tab);
+}
 
 var tm = new ehom.TabManager();
 var cleanupIntervalId = window.setInterval(tm.cleanupTabs.bind(tm), tm.cleanupIntervalMilis());

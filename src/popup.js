@@ -6,6 +6,8 @@ window.onload = function() {
     var tle = document.getElementById("tab_life");
     var cleanup_interval_element = document.getElementById("cleanup_interval_cv");
     var cie = document.getElementById("cleanup_interval");
+    var ctbox = document.getElementById("ct-box");
+    var node = '';
     min_tabs_element.textContent = tm.minTabs;
     mte.value = tm.minTabs;
     tab_life_element.textContent = tm.tabLife;
@@ -18,6 +20,12 @@ window.onload = function() {
     tle.addEventListener("input", tleUpdater);
     cie.addEventListener("change", cieHandler);
     cie.addEventListener("input", cieUpdate);
+    for (var i = 0; i < tm.closedTabs.length; i++) {
+        if (tm.closedTabs[i]) {
+            node = '<a href="' + tm.closedTabs[i] + '" target="_blank">' + tm.closedTabs[i] + '</a><br /><br />';
+            ctbox.innerHTML += node;
+        }
+    }
 }
 
 function minTabsHandler(event) {

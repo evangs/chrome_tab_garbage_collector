@@ -21,6 +21,10 @@
           width: 30px;
           display: inline-block;
       }
+      .closed-tabs {
+          max-height: 300px;
+          overflow-y: scroll;
+      }
     </style>
 
     <!--
@@ -38,6 +42,8 @@
     <span class="label">Tab Life (minutes):</span> <span class="cv" id="tab_life_cv"></span><input id="tab_life" type="range" min="1" max="120" />
     <br />
     <span class="label">Cleanup Interval (minutes):</span> <span class="cv" id="cleanup_interval_cv"></span><input id="cleanup_interval" type="range" min="1" max="120" />
+    <h2>Exterminated Tabs</h2>
+    <div id="ct-box" class="closed-tabs"></div>
   </body>
 </html>
 
