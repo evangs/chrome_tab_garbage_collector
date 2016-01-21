@@ -95,6 +95,7 @@ ehom.TabManager.prototype.tabCleanup = function tabCleanup(tab) {
     }
 
     // no rules to exclude tab, close tab
+    this.rememberTab(tab.url);
     chrome.tabs.remove(tab.id, null);
 };
 
