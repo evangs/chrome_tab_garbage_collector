@@ -25,6 +25,17 @@
           max-height: 300px;
           overflow-y: scroll;
       }
+      .button {
+        padding: 5px;
+        display: inline-block;
+        background-color: #5bc0de;
+        color: #fff;
+        text-decoration: none;
+        margin: 10px 0;
+      }
+      .button:hover {
+          background-color: #46b8da;
+      }
     </style>
 
     <!--
@@ -42,6 +53,7 @@
     <span class="label">Tab Life (minutes):</span> <span class="cv" id="tab_life_cv"></span><input id="tab_life" type="range" min="1" max="120" />
     <br />
     <span class="label">Cleanup Interval (minutes):</span> <span class="cv" id="cleanup_interval_cv"></span><input id="cleanup_interval" type="range" min="1" max="120" />
+    <a id="ex-button" class="button" href="#" data-url=""></a>
     <h2>Exterminated Tabs</h2>
     <div id="ct-box" class="closed-tabs"></div>
   </body>

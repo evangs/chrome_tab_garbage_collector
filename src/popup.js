@@ -8,6 +8,8 @@ window.onload = function() {
     var cie = document.getElementById("cleanup_interval");
     var ctbox = document.getElementById("ct-box");
     var node = '';
+    console.log('about to query');
+    chrome.tabs.query({active: true, windowId: tm.currentWindow}, currentTabHandler);
     min_tabs_element.textContent = tm.minTabs;
     mte.value = tm.minTabs;
     tab_life_element.textContent = tm.tabLife;
@@ -25,6 +27,40 @@ window.onload = function() {
             node = '<a href="' + tm.closedTabs[i] + '" target="_blank">' + tm.closedTabs[i] + '</a><br /><br />';
             ctbox.innerHTML += node;
         }
+    }
+}
+
+function currentTabHandler(tab) {
+    console.log('here');
+    var tm = chrome.extension.getBackgroundPage().tm;
+    var dregex = /\/\/([A-Za-z0-9\.-]*)\//
+    var match = dregex.exec(tab[0].url);
+    var exbtn = document.getElementById("ex-button");
+    console.log(JSON.stringify(tab));
+    console.log(match);
+    exbtn.addEventListener("click", exbtnHandler);
+    if (match) {
+        if (tm.exceptions.indexOf(match[1]) > -1) {
+            exbtn.innerHTML = 'Remove page from exclusion List';
+            exbtn['data-url'] = match[1];
+        } else {
+            exbtn.innerHTML = 'Exclude Current Page';
+            exbtn['data-url'] = match[1];
+        }
+    }
+}
+
+function exbtnHandler(event) {
+    event.preventDefault();
+    var tm = chrome.extension.getBackgroundPage().tm;
+    var exbtn = document.getElementById("ex-button");
+    if (exbtn.innerHTML == 'Exclude Current Page') {
+        console.log(exbtn['data-url']);
+        tm.addException(exbtn['data-url']);
+        exbtn.innerHTML = 'Remove page from exclusion List';
+    } else {
+        tm.removeException(exbtn['data-url']);
+        exbtn.innerHTML = 'Exclude Current Page';
     }
 }
 

@@ -9,7 +9,7 @@ ehom.TabManager = function TabManager() {
     this.tabCount = 0;
     this.currentWindow = null;
     this.closedTabs = Array(this.numRememberedTabs);
-    this.exceptions = ['www.pandora.com', 'pandora.com'];
+    this.exceptions = [];
 
     chrome.windows.getCurrent({}, ehom.init);
     chrome.tabs.onCreated.addListener(ehom.tabCreate);
@@ -25,6 +25,21 @@ ehom.TabManager.prototype.rememberTab = function rememberTab(url) {
     }
 
     this.closedTabs[0] = url;
+};
+
+ehom.TabManager.prototype.addException = function addException(url) {
+    if (this.exceptions.indexOf(url) < 0) {
+        this.exceptions.push(url);
+        chrome.storage.sync.set({'tm-exceptions': JSON.stringify(this.exceptions)}, null);
+    }
+};
+
+ehom.TabManager.prototype.removeException = function removeException(url) {
+    var index = -1;
+    if (index = this.exceptions.indexOf(url) > -1) {
+        this.exceptions.splice(index, 1);
+        chrome.storage.sync.set({'tm-exceptions': JSON.stringify(this.exceptions)}, null);
+    }
 };
 
 ehom.TabManager.prototype.updateMinTabs = function updateMinTabs(minTabs) {
@@ -66,17 +81,20 @@ ehom.TabManager.prototype.cleanupTabs = function cleanupTabs() {
 };
 
 ehom.TabManager.prototype.tabCleanup = function tabCleanup(tab) {
-    var dregex = /[http:\/\/|https:\/\/]+(.*\.[com|net|org|co]+)/
 
-    var match = dregex.exec(tab.url);
-    if (match){
-        if (this.exceptions.indexOf(match[1]) < 0) {
-            this.rememberTab(tab.url);
-            chrome.tabs.remove(tab.id, null);
-        }
+    // if tab is producing sound, ignore it
+    if (tab.audible) {
         return;
     }
 
+    // if tab url is in exclusion list, ignore it
+    var dregex = /\/\/([A-Za-z0-9\.-]*)\//
+    var match = dregex.exec(tab.url);
+    if (match && this.exceptions.indexOf(match[1]) > -1){
+        return;
+    }
+
+    // no rules to exclude tab, close tab
     chrome.tabs.remove(tab.id, null);
 };
 
@@ -108,6 +126,7 @@ ehom.TabManager.prototype.tabActivatedEvent = function tabActivatedEvent(activeI
 
 ehom.TabManager.prototype.windowOnFocusChangedEvent = function windowOnFocusChangedEvent(winId) {
     if (winId != chrome.windows.WINDOW_ID_NONE) {
+        this.currentWindow = winId;
         chrome.tabs.query({active: true, windowId: winId}, ehom.updateActive);
     }
 };
@@ -138,7 +157,7 @@ ehom.TabManager.prototype.initTabs = function initTabs(tabs) {
 ehom.TabManager.prototype.init = function init(window) {
     this.currentWindow = window.id;
     chrome.tabs.query({}, ehom.initTabs);
-    chrome.storage.sync.get(['tm-tablife', 'tm-mintabs', 'tm-cleanupinterval'], ehom.loadSettings);
+    chrome.storage.sync.get(['tm-tablife', 'tm-mintabs', 'tm-cleanupinterval', 'tm-exceptions'], ehom.loadSettings);
 };
 
 ehom.TabManager.prototype.loadSettings = function loadSettings(settings) {
@@ -150,6 +169,9 @@ ehom.TabManager.prototype.loadSettings = function loadSettings(settings) {
     }
     if (settings['tm-cleanupinterval']) {
         this.updateCleanupInterval(parseFloat(settings['tm-cleanupinterval']));
+    }
+    if (settings['tm-exceptions']) {
+        this.exceptions = JSON.parse(settings['tm-exceptions']);
     }
 };
 
