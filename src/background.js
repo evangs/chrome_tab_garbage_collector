@@ -29,14 +29,17 @@ ehom.TabManager.prototype.rememberTab = function rememberTab(url) {
 
 ehom.TabManager.prototype.updateMinTabs = function updateMinTabs(minTabs) {
     this.minTabs = minTabs;
+    chrome.storage.sync.set({'tm-mintabs': this.minTabs}, null);
 };
 
 ehom.TabManager.prototype.updateTabLife = function updateTabLife(tabLife) {
     this.tabLife = tabLife;
+    chrome.storage.sync.set({'tm-tablife': this.tabLife}, null);
 };
 
 ehom.TabManager.prototype.updateCleanupInterval = function updateCleanupInterval(cleanupInterval) {
     this.cleanupInterval = cleanupInterval;
+    chrome.storage.sync.set({'tm-cleanupinterval': this.cleanupInterval}, null);
     window.clearInterval(cleanupIntervalId);
     cleanupIntervalId = window.setInterval(this.cleanupTabs.bind(this), this.cleanupIntervalMilis());
 };
@@ -135,6 +138,19 @@ ehom.TabManager.prototype.initTabs = function initTabs(tabs) {
 ehom.TabManager.prototype.init = function init(window) {
     this.currentWindow = window.id;
     chrome.tabs.query({}, ehom.initTabs);
+    chrome.storage.sync.get(['tm-tablife', 'tm-mintabs', 'tm-cleanupinterval'], ehom.loadSettings);
+};
+
+ehom.TabManager.prototype.loadSettings = function loadSettings(settings) {
+    if (settings['tm-mintabs']) {
+        this.updateMinTabs(parseFloat(settings['tm-mintabs']));
+    }
+    if (settings['tm-tablife']) {
+        this.updateTabLife(parseFloat(settings['tm-tablife']));
+    }
+    if (settings['tm-cleanupinterval']) {
+        this.updateCleanupInterval(parseFloat(settings['tm-cleanupinterval']));
+    }
 };
 
 ehom.init = function(window) {
@@ -160,7 +176,10 @@ ehom.updateActive = function(tabs) {
 };
 ehom.tabCleanup = function(tab) {
     tm.tabCleanup(tab);
-}
+};
+ehom.loadSettings = function(settings) {
+    tm.loadSettings(settings);
+};
 
 var tm = new ehom.TabManager();
 var cleanupIntervalId = window.setInterval(tm.cleanupTabs.bind(tm), tm.cleanupIntervalMilis());

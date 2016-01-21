@@ -3,7 +3,7 @@
 
   "name": "Tab Exterminator",
   "description": "This extension closes tabs that haven't been active for a while",
-  "version": "0.8",
+  "version": "1.0",
 
   "background": {
       "scripts": ["background.js"]
@@ -16,6 +16,7 @@
   "permissions": [
     "activeTab",
     "tabs",
-    "windows"
+    "windows",
+    "storage"
   ]
 }
